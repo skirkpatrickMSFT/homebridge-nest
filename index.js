@@ -95,7 +95,11 @@ class NestPlatform {
 
                 // Unregister any stale cached accessories not matched to a current device
                 if (this.cachedAccessories.length > 0) {
-                    this.api.unregisterPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.cachedAccessories);
+                    try {
+                        this.api.unregisterPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.cachedAccessories);
+                    } catch (e) {
+                        this.log.debug('Could not unregister stale cached accessories (may not be bridged yet): ' + e.message);
+                    }
                     this.cachedAccessories = [];
                 }
                 // Register only new accessories (those without a matching cached entry)
