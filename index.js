@@ -93,9 +93,14 @@ class NestPlatform {
                 let initialState = this.conn.apiResponseToObjectTree(this.conn.currentState);
                 this.accessoryLookup = generateAccessories(initialState);
 
-                this.api.unregisterPlatformAccessories('homebridge-nest', 'Nest', this.cachedAccessories);
-                this.cachedAccessories = [];
-                this.api.registerPlatformAccessories('homebridge-nest', 'Nest', this.accessoryLookup.map(el => el.accessory));
+                // In Homebridge v2, cached accessories from configureAccessory are not yet on
+                // the bridge. They must be registered first before they can be unregistered.
+                if (this.cachedAccessories.length > 0) {
+                    this.api.registerPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.cachedAccessories);
+                    this.api.unregisterPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.cachedAccessories);
+                    this.cachedAccessories = [];
+                }
+                this.api.registerPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.accessoryLookup.map(el => el.accessory));
 
                 let accessoriesMounted = this.accessoryLookup.map(el => el.constructor.name);
 
