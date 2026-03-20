@@ -93,14 +93,16 @@ class NestPlatform {
                 let initialState = this.conn.apiResponseToObjectTree(this.conn.currentState);
                 this.accessoryLookup = generateAccessories(initialState);
 
-                // In Homebridge v2, cached accessories from configureAccessory are not yet on
-                // the bridge. They must be registered first before they can be unregistered.
+                // Unregister any stale cached accessories not matched to a current device
                 if (this.cachedAccessories.length > 0) {
-                    this.api.registerPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.cachedAccessories);
                     this.api.unregisterPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.cachedAccessories);
                     this.cachedAccessories = [];
                 }
-                this.api.registerPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', this.accessoryLookup.map(el => el.accessory));
+                // Register only new accessories (those without a matching cached entry)
+                const newAccessories = this.accessoryLookup.filter(el => el.isNew).map(el => el.accessory);
+                if (newAccessories.length > 0) {
+                    this.api.registerPlatformAccessories('@skirkpatrick88/homebridge-nest', 'Nest', newAccessories);
+                }
 
                 let accessoriesMounted = this.accessoryLookup.map(el => el.constructor.name);
 
@@ -133,6 +135,14 @@ class NestPlatform {
 
     configureAccessory(accessory) {
         this.cachedAccessories.push(accessory);
+    }
+
+    consumeCachedAccessory(UUID) {
+        const idx = this.cachedAccessories.findIndex(a => a.UUID === UUID);
+        if (idx >= 0) {
+            return this.cachedAccessories.splice(idx, 1)[0];
+        }
+        return null;
     }
 
     optionSet(key, serialNumber, deviceId) {
@@ -178,5 +188,5 @@ module.exports = function(homebridge) {
     ProtectAccessory = require('./lib/nest-protect-accessory')();
     LockAccessory = require('./lib/nest-lock-accessory')();
 
-    homebridge.registerPlatform('homebridge-nest', 'Nest', NestPlatform);
+    homebridge.registerPlatform('@skirkpatrick88/homebridge-nest', 'Nest', NestPlatform);
 };
