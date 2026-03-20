@@ -16,12 +16,6 @@ Promise.prototype.asCallback = function(callback) {
     this.then(res => callback(null, res)).catch(err => callback(err));
 };
 
-Promise.prototype.return = function(val) {
-    this.then(function() {
-        return val;
-    });
-};
-
 class NestPlatform {
     constructor(log, config, api) {
         // auth info
