@@ -1,7 +1,7 @@
 {
   "name": "@skirkpatrick88/homebridge-nest",
   "displayName": "Homebridge Nest (v2 Compatible)",
-  "version": "4.6.10",
+  "version": "4.6.11",
   "description": "Nest Thermostat, Protect and Lock plug-in for Homebridge, updated for Homebridge v2 compatibility",
   "license": "ISC",
   "repository": {
