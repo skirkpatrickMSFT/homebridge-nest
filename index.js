@@ -70,7 +70,8 @@ class NestPlatform {
 
             const updateAccessories = function(data, accList) {
                 accList.map(function(acc) {
-                    const device = data.devices[acc.deviceGroup][acc.deviceId];
+                    const group = data.devices[acc.deviceGroup];
+                    const device = group && group[acc.deviceId];
                     if (device) {
                         const structureId = device.structure_id;
                         const structure = data.structures[structureId];
@@ -111,12 +112,23 @@ class NestPlatform {
                 let accessoriesMounted = this.accessoryLookup.map(el => el.constructor.name);
 
                 if (this.config.readyCallback) {
-                    axios.post(this.config.readyCallback, {
-                        thermostat_count: accessoriesMounted.filter(el => el == 'NestThermostatAccessory').length,
-                        tempsensor_count: accessoriesMounted.filter(el => el == 'NestTempSensorAccessory').length,
-                        protect_count: accessoriesMounted.filter(el => el == 'NestProtectAccessory').length,
-                        lock_count: accessoriesMounted.filter(el => el == 'NestLockAccessory').length
-                    }).catch(() => { });
+                    try {
+                        const cbUrl = new URL(this.config.readyCallback);
+                        if (cbUrl.protocol !== 'https:') {
+                            this.log.warn('readyCallback URL must use HTTPS; skipping callback.');
+                        } else {
+                            const counts = accessoriesMounted.reduce((acc, name) => {
+                                if (name === 'NestThermostatAccessory') acc.thermostat_count++;
+                                else if (name === 'NestTempSensorAccessory') acc.tempsensor_count++;
+                                else if (name === 'NestProtectAccessory') acc.protect_count++;
+                                else if (name === 'NestLockAccessory') acc.lock_count++;
+                                return acc;
+                            }, { thermostat_count: 0, tempsensor_count: 0, protect_count: 0, lock_count: 0 });
+                            axios.post(this.config.readyCallback, counts).catch(() => { });
+                        }
+                    } catch(e) {
+                        this.log.warn('readyCallback URL is invalid; skipping callback.');
+                    }
                 }
             } catch(err) {
                 this.log.error(err);
