@@ -17,7 +17,7 @@
     "nest"
   ],
   "engines": {
-    "homebridge": ">=1.6.0",
+    "homebridge": "^1.6.0 || ^2.0.0",
     "node": ">=18.0.0"
   },
   "scripts": {
